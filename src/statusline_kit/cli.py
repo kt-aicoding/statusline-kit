@@ -20,6 +20,19 @@ CODEX_STATUS_LINE = """status_line = [
 ]
 status_line_use_colors = true"""
 
+CODEX_TOP_LEVEL_PREFERENCES = {
+    "check_for_update_on_startup": "false",
+    "project_doc_fallback_filenames": '["CLAUDE.md", "README.md"]',
+    "project_doc_max_bytes": "100000",
+    "tool_output_token_limit": "40000",
+}
+
+CODEX_CONFIG_SECTIONS = {
+    "history": 'persistence = "save-all"\nmax_bytes = 10485760',
+    "shell_environment_policy": 'inherit = "all"\nexclude = ["*TOKEN*", "*SECRET*", "*KEY*", "*PASSWORD*", "*password*"]',
+    "agents": "max_threads = 6\nmax_depth = 1\njob_max_runtime_seconds = 1800",
+}
+
 RESET = "\033[0m"
 BOLD = "\033[1m"
 DIM = "\033[2m"
@@ -31,8 +44,8 @@ CYAN = "\033[36m"
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="kt-statusline",
-        description="Status line kit for Claude Code and Codex CLI.",
+        prog="kt-aicoding-config",
+        description="Claude Code and Codex CLI configuration kit.",
     )
     subparsers = parser.add_subparsers(dest="command")
 
@@ -48,7 +61,7 @@ def main(argv: list[str] | None = None) -> int:
 
     install_codex = subparsers.add_parser(
         "install-codex",
-        help="Install the recommended Codex CLI TUI status line config.",
+        help="Install the recommended Codex CLI preferences and TUI status line config.",
     )
     install_codex.add_argument("--config", type=Path, default=default_codex_config())
 
@@ -64,7 +77,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "install-codex":
         backup = install_codex_statusline(args.config)
-        print(f"Installed Codex CLI TUI status line in {args.config}")
+        print(f"Installed Codex CLI config in {args.config}")
         if backup:
             print(f"Backup: {backup}")
         return 0
@@ -318,10 +331,41 @@ def read_json_object(path: Path) -> dict[str, Any]:
 def install_codex_statusline(config_path: Path) -> Path | None:
     text = config_path.read_text() if config_path.exists() else ""
     backup = backup_file(config_path)
-    updated = upsert_tui_status_line(text)
+    updated = upsert_codex_config(text)
     config_path.parent.mkdir(parents=True, exist_ok=True)
     config_path.write_text(updated)
     return backup
+
+
+def upsert_codex_config(text: str) -> str:
+    updated = upsert_top_level_preferences(text, CODEX_TOP_LEVEL_PREFERENCES)
+    updated = upsert_tui_status_line(updated)
+    for table_name, body in CODEX_CONFIG_SECTIONS.items():
+        updated = upsert_table(updated, table_name, body)
+    return updated
+
+
+def upsert_top_level_preferences(text: str, preferences: dict[str, str]) -> str:
+    lines = text.splitlines()
+    first_table = next(
+        (index for index, line in enumerate(lines) if line.strip().startswith("[") and line.strip().endswith("]")),
+        len(lines),
+    )
+    top = lines[:first_table]
+    rest = lines[first_table:]
+    keys = set(preferences)
+    kept_top = []
+    for line in top:
+        stripped = line.strip()
+        key = stripped.split("=", 1)[0].strip() if "=" in stripped else ""
+        if key in keys:
+            continue
+        kept_top.append(line)
+    while kept_top and not kept_top[-1].strip():
+        kept_top.pop()
+    preference_lines = [f"{key} = {value}" for key, value in preferences.items()]
+    new_top = kept_top + ([""] if kept_top else []) + preference_lines
+    return "\n".join(new_top + ([""] if rest and new_top else []) + rest).rstrip() + "\n"
 
 
 def upsert_tui_status_line(text: str) -> str:
@@ -337,6 +381,18 @@ def upsert_tui_status_line(text: str) -> str:
     replacement = ["[tui]"] + CODEX_STATUS_LINE.splitlines()
     if kept:
         replacement.extend([""] + kept)
+    new_lines = lines[:start] + replacement + lines[end:]
+    return "\n".join(new_lines).rstrip() + "\n"
+
+
+def upsert_table(text: str, table_name: str, body: str) -> str:
+    lines = text.splitlines()
+    start, end = find_table(lines, table_name)
+    replacement = [f"[{table_name}]"] + body.splitlines()
+    if start is None:
+        prefix = text.rstrip()
+        section = "\n".join(replacement) + "\n"
+        return (prefix + "\n\n" if prefix else "") + section
     new_lines = lines[:start] + replacement + lines[end:]
     return "\n".join(new_lines).rstrip() + "\n"
 

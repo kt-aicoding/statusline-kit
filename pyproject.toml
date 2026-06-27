@@ -1,13 +1,14 @@
 [project]
-name = "kt-statusline"
+name = "kt-aicoding-config"
 version = "0.1.0"
-description = "Status line kit for Claude Code and Codex CLI."
+description = "Claude Code and Codex CLI configuration kit."
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MIT" }
 authors = [{ name = "kt-aicoding" }]
 
 [project.scripts]
+kt-aicoding-config = "statusline_kit.cli:main"
 kt-statusline = "statusline_kit.cli:main"
 
 [tool.setuptools]

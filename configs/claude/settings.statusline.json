@@ -1,0 +1,6 @@
+{
+  "statusLine": {
+    "type": "command",
+    "command": "~/.kt-aicoding/cc-codex-config/kt-statusline claude"
+  }
+}

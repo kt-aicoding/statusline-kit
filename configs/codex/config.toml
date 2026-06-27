@@ -1,0 +1,30 @@
+# Safe Codex CLI preferences managed by kt-aicoding/cc-codex-config.
+# Secrets, provider tokens, project trust entries, and machine-local paths do not belong here.
+
+check_for_update_on_startup = false
+project_doc_fallback_filenames = ["CLAUDE.md", "README.md"]
+project_doc_max_bytes = 100000
+tool_output_token_limit = 40000
+
+[tui]
+status_line = [
+  "model-with-reasoning",
+  "context-used",
+  "five-hour-limit",
+  "weekly-limit",
+  "git-branch",
+]
+status_line_use_colors = true
+
+[history]
+persistence = "save-all"
+max_bytes = 10485760
+
+[shell_environment_policy]
+inherit = "all"
+exclude = ["*TOKEN*", "*SECRET*", "*KEY*", "*PASSWORD*", "*password*"]
+
+[agents]
+max_threads = 6
+max_depth = 1
+job_max_runtime_seconds = 1800

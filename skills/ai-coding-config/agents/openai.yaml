@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI Coding Config"
+  short_description: "Configure Claude Code and Codex CLI preferences."
+  default_prompt: "Configure my Claude Code and Codex CLI preferences."

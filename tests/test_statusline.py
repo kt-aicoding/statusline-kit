@@ -6,7 +6,7 @@ import tempfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from statusline_kit.cli import format_claude_status, main, upsert_tui_status_line
+from statusline_kit.cli import format_claude_status, main, upsert_codex_config, upsert_tui_status_line
 
 
 class ClaudeStatusTests(unittest.TestCase):
@@ -102,6 +102,39 @@ gpt-5-codex = "seen"
         self.assertNotIn('"old"', result)
         self.assertIn("[tui.model_availability_nux]", result)
         self.assertIn('gpt-5-codex = "seen"', result)
+
+    def test_installs_safe_codex_preferences(self):
+        result = upsert_codex_config('model = "gpt-5.5"\n')
+
+        self.assertIn("check_for_update_on_startup = false", result)
+        self.assertIn('project_doc_fallback_filenames = ["CLAUDE.md", "README.md"]', result)
+        self.assertIn("[history]", result)
+        self.assertIn('persistence = "save-all"', result)
+        self.assertIn("[shell_environment_policy]", result)
+        self.assertIn('"*TOKEN*"', result)
+        self.assertIn("[agents]", result)
+        self.assertIn("max_threads = 6", result)
+
+    def test_full_codex_config_preserves_nested_tables(self):
+        original = """model = "gpt-5.5"
+
+[tui]
+theme = "dark"
+status_line = ["old"]
+
+[tui.model_availability_nux]
+gpt-5.5 = 1
+
+[plugins."vercel@openai-curated"]
+enabled = true
+"""
+        result = upsert_codex_config(original)
+
+        self.assertIn('theme = "dark"', result)
+        self.assertIn("[tui.model_availability_nux]", result)
+        self.assertIn("gpt-5.5 = 1", result)
+        self.assertIn('[plugins."vercel@openai-curated"]', result)
+        self.assertIn("enabled = true", result)
 
 
 class CliDispatchTests(unittest.TestCase):

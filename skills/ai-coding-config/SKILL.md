@@ -1,22 +1,22 @@
 ---
-name: ai-coding-statusline
-description: Configure matching status lines for Claude Code and Codex CLI. Use when the user asks to add, install, update, or standardize AI coding status bars/status lines showing model, reasoning effort, context used, 5-hour limit, weekly limit, and current git branch.
+name: ai-coding-config
+description: Configure Claude Code and Codex CLI preferences for KT AI Coding. Use when the user asks to add, install, update, or standardize Claude Code/Codex config, status bars/status lines, safe Codex defaults, history/shell/agent preferences, or reusable AI coding configuration.
 ---
 
-# AI Coding Statusline
+# AI Coding Config
 
 ## Workflow
 
 Configure both tools with the upstream installer:
 
 ```bash
-python3 -c "$(curl -fsSL https://raw.githubusercontent.com/kt-aicoding/statusline-kit/main/scripts/install.py)"
+python3 -c "$(curl -fsSL https://raw.githubusercontent.com/kt-aicoding/cc-codex-config/main/scripts/install.py)"
 ```
 
 This installs:
 
-- Claude Code `statusLine` command at `~/.kt-aicoding/statusline-kit/kt-statusline`
-- Codex CLI `[tui].status_line` in `~/.codex/config.toml`
+- Claude Code `statusLine` command at `~/.kt-aicoding/cc-codex-config/kt-statusline`
+- Codex CLI safe preferences and `[tui].status_line` in `~/.codex/config.toml`
 
 The target display is:
 

@@ -1,64 +1,67 @@
 # cc-codex-config
 
-我的 Claude Code（cc）和 Codex CLI 配置仓库：状态栏、偏好、可复制 Skill、安装脚本和可审计配置片段。
+我的 Claude Code（cc）和 Codex CLI 配置仓库，面向 Warp 终端使用场景维护。
 
-这个仓库不再只定位为 `statusline` 工具。状态栏是第一个模块，后续所有和 cc / Codex 相关的安全配置、个人偏好、Skill、MCP、profile 模板都放在这里统一维护。
+这里统一保存可公开的 AI Coding 配置：状态栏、Codex 偏好、Warp 注意事项、操作资料、Codex Skill、profile 模板和一键安装脚本。状态栏只是第一个模块，后续 cc / Codex 相关的安全配置和个人偏好都放在这里维护。
 
 ## 一句话配置
-
-复制下面这一行运行即可同时配置 Claude Code 和 Codex CLI：
 
 ```bash
 python3 -c "$(curl -fsSL https://raw.githubusercontent.com/kt-aicoding/cc-codex-config/main/scripts/install.py)"
 ```
 
-配置完成后，重启 Claude Code 和 Codex。
+运行后重启 Claude Code 和 Codex。
 
-## 当前会配置什么
+安装脚本会先备份原配置，再增量写入安全配置：
 
-### Warp 终端
+- Claude Code：`~/.claude/settings.json`
+- Codex CLI：`~/.codex/config.toml`
+- 本地状态栏命令：`~/.kt-aicoding/cc-codex-config/kt-statusline`
 
-- 自动检测 Warp 环境：`TERM_PROGRAM=WarpTerminal` 或 `WARP_*` 环境变量。
+## 快速入口
+
+| 内容 | 路径 |
+| --- | --- |
+| 一键安装脚本 | [scripts/install.py](scripts/install.py) |
+| Codex 配置片段 | [configs/codex/config.toml](configs/codex/config.toml) |
+| Claude Code 状态栏配置片段 | [configs/claude/settings.statusline.json](configs/claude/settings.statusline.json) |
+| Warp 使用建议 | [configs/warp/README.md](configs/warp/README.md) |
+| Codex profile 模板 | [configs/codex/profiles/](configs/codex/profiles/) |
+| 操作资料 | [docs/operations/](docs/operations/) |
+| 相关项目与取舍 | [docs/related-projects.md](docs/related-projects.md) |
+| Codex Skill | [skills/ai-coding-config/SKILL.md](skills/ai-coding-config/SKILL.md) |
+
+## 会配置什么
+
+### Warp
+
+- 检测 `TERM_PROGRAM=WarpTerminal` 或 `WARP_*` 环境变量。
 - Claude Code 状态栏颜色不会被 Warp 默认导出的 `NO_COLOR=1` 关闭。
 - 如需关闭本工具颜色，只设置 `KT_STATUSLINE_NO_COLOR=1`。
-- 额外说明见 [configs/warp/README.md](configs/warp/README.md)。
 
 ### Claude Code
 
-- 安装本地状态栏命令：`~/.kt-aicoding/cc-codex-config/kt-statusline`
-- 写入 `~/.claude/settings.json` 的 `statusLine`
-- 状态栏支持 ANSI 颜色预警
+- 写入 `statusLine`，调用本地无依赖 Python 渲染器。
+- 默认显示：模型、effort、context、5h、weekly、Git 分支。
+- 根据 context 和额度剩余自动显示红/黄/绿风险颜色。
 
 ### Codex CLI
 
-- 写入 `[tui].status_line`
-- 开启 `status_line_use_colors`
-- 写入安全的通用偏好：
-  - `model = "gpt-5.5"`
-  - `model_reasoning_effort = "xhigh"`
-  - `model_verbosity = "medium"`
-  - `review_model = "gpt-5.5"`
-  - `approval_policy = "on-request"`
-  - `sandbox_mode = "workspace-write"`
-  - `check_for_update_on_startup = false`
-  - `project_doc_fallback_filenames = ["CLAUDE.md", "README.md"]`
-  - `project_doc_max_bytes = 100000`
-  - `tool_output_token_limit = 40000`
-  - `[sandbox_workspace_write]` 默认禁用网络并排除临时目录
-  - `[history]` 保存历史
-  - `[shell_environment_policy]` 过滤 token / secret / key / password
-  - `[agents]` 设置并发和运行时间上限
-  - 常用 OpenAI curated plugins：Vercel、Supabase、Build Web Apps、Expo
-  - 常用 MCP servers：context7、playwright
+- 写入 `[tui].status_line` 和 `status_line_use_colors = true`。
+- 写入可公开、安全的常用偏好：
+  - 默认模型、reasoning effort、verbosity、review model
+  - approval / sandbox 策略
+  - project doc fallback
+  - history / shell env / agents
+  - OpenAI curated plugins
+  - context7 / playwright MCP servers
 
-写入前会自动生成带时间戳的备份文件。
+## 状态栏
 
-## 状态栏样式
-
-目标效果：
+默认效果：
 
 ```text
-gpt-5.5 high · Context 25% used · 5h 67% left · weekly 71% left · main
+gpt-5.5 xhigh · Context 25% used · 5h 67% left · weekly 71% left · main
 ```
 
 字段顺序：
@@ -67,37 +70,14 @@ gpt-5.5 high · Context 25% used · 5h 67% left · weekly 71% left · main
 模型 effort · Context 已用百分比 · 5h 剩余百分比 · weekly 剩余百分比 · 当前 Git 分支
 ```
 
-Claude Code 的状态栏会使用 ANSI 颜色做预警：
+Claude Code 风险颜色：
 
 | 字段 | 绿色 | 黄色 | 红色 |
 | --- | --- | --- | --- |
 | Context used | `< 60%` | `60-79%` | `>= 80%` |
 | 5h / weekly left | `> 40%` | `21-40%` | `<= 20%` |
 
-如果不想显示颜色：
-
-```bash
-KT_STATUSLINE_NO_COLOR=1
-```
-
-## 仓库结构
-
-```text
-configs/                         可公开审计的配置片段
-configs/claude/                  Claude Code 配置片段
-configs/codex/                   Codex CLI 配置片段
-configs/warp/                    Warp 终端使用建议
-configs/codex/profiles/          Codex profile 模板
-docs/operations/                 Warp / Claude Code / Codex CLI 快捷键和操作资料
-docs/related-projects.md         相关项目调研和取舍
-scripts/install.py               一句话安装脚本
-skills/ai-coding-config/         可复制的 Codex Skill
-src/statusline_kit/              Claude Code 状态栏渲染器和本地 CLI
-```
-
-### Claude Code 可选状态栏字段
-
-默认状态栏保持短。如果需要临时显示更多信息，可以在启动 Claude Code 前设置：
+可选显示更多字段：
 
 ```bash
 export KT_STATUSLINE_SHOW_CWD=1
@@ -106,17 +86,11 @@ export KT_STATUSLINE_SHOW_COST=1
 export KT_STATUSLINE_SHOW_VERSION=1
 ```
 
-这些字段只影响 Claude Code 的本地 statusLine 渲染器，不影响 Codex CLI 内置状态栏。
+关闭本工具颜色：
 
-## Skill
-
-本仓库内置一个可复制的 Codex Skill：
-
-```text
-skills/ai-coding-config/SKILL.md
+```bash
+export KT_STATUSLINE_NO_COLOR=1
 ```
-
-这个 Skill 的用途是让 Codex 在用户要求配置 Claude Code / Codex CLI 偏好、状态栏或通用 AI Coding 环境时，直接运行本仓库的一句话安装命令。
 
 ## 操作资料
 
@@ -124,35 +98,31 @@ skills/ai-coding-config/SKILL.md
 - [Claude Code](docs/operations/claude-code.md)
 - [Codex CLI](docs/operations/codex-cli.md)
 
+## 本地开发
+
+```bash
+python3 scripts/install.py
+python3 -m unittest
+./bin/kt-aicoding-config doctor
+```
+
+检查 Codex 配置：
+
+```bash
+codex --strict-config --help
+```
+
 ## 安全边界
 
 这个仓库只提交可公开配置：
 
-- 不提交 API token、密钥、供应商鉴权配置。
+- 不提交 API token、provider key、OAuth token。
 - 不提交个人机器上的项目 trust 列表。
-- 不提交包含私有路径或敏感业务上下文的配置。
-- 安装脚本优先做增量写入和备份，不直接覆盖整个配置文件。
+- 不提交私有路径、私有业务上下文或大段个人开发者指令。
+- 安装脚本只做增量写入，写入前自动备份。
 
-## 本地开发
+## 资料来源
 
-克隆仓库后可以用本地脚本安装：
-
-```bash
-python3 scripts/install.py
-```
-
-运行测试：
-
-```bash
-python3 -m unittest
-```
-
-检查当前终端和配置路径：
-
-```bash
-./bin/kt-aicoding-config doctor
-```
-
-## 链接
-
-- Claude Code status line 文档：https://code.claude.com/docs/en/statusline
+- Claude Code statusLine 文档：https://code.claude.com/docs/en/statusline
+- Codex CLI config 文档：https://github.com/openai/codex/blob/main/docs/config.md
+- Warp 环境变量文档：https://docs.warp.dev/knowledge-and-collaboration/warp-drive/environment-variables/
